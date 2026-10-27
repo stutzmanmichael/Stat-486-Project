@@ -1,9 +1,9 @@
 # STAT 486 Project Plan
 
 **Due:** Tuesday, October 27, 2026, at 11:59 PM Mountain Time  
-**Team:** [Names]  
-**Repository:** [GitHub URL]  
-**Date updated:** [Date]
+**Team:** Ryan Morrow and Michael Stutzman
+**Repository:** (https://github.com/stutzmanmichael/Stat-486-Project)
+**Date updated:** 10/27/26
 
 Use these prompts to plan your investigation. Keep the answers focused; revise the plan when evidence or instructor feedback changes your direction. The Oct. 27 checkpoint still requires a new, dated project-plan entry in the root `README.md` of your team's GitHub repository. Link this document there if you use it; this document does not replace that entry.
 
@@ -20,7 +20,7 @@ Choose one route and explain why it fits your question and available time.
 
 - [ ] **A. Develop something new** in an ML method or system
 - [ ] **B. Kaggle competition** with two meaningfully different pipelines
-- [ ] **C. Build a dataset** and use it in a reproducible ML pipeline
+- [X] **C. Build a dataset** and use it in a reproducible ML pipeline
 
 **Why this route:** [How does the route support the question and the team's intended contribution?]
 
