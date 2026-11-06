@@ -1,14 +1,14 @@
 # STAT 486 — Recession Prediction Project
 
-**Team Members:** Michael Stutzman and Ryan Morrow 
+**Team Members:** Michael Stutzman and Ryan Morrow
 
 ## Project Overview
 
-Our project investigates whether machine learning can predict economic recessions in the United States using historical economic data.
+Our project investigates whether machine learning can predict economic recessions in the United States using historical economic data from the Federal Reserve Economic Data (FRED) database.
 
-We plan to collect economic indicators from the Federal Reserve Economic Data (FRED) database and combine them into a single dataset. We will then use different machine learning models to see whether these indicators can help predict future recessions.
+We are combining economic indicators into a monthly dataset and comparing machine learning models to see whether these indicators can help predict future recession conditions.
 
-**Research Question:** Can we use machine learning to predict recessions in the United States before they happen?
+**Research Question:** Can machine learning help predict U.S. recessions before they happen?
 
 ## Project Checkpoints
 
@@ -16,117 +16,133 @@ We plan to collect economic indicators from the Federal Reserve Economic Data (F
 
 We chose Route C, which involves building a dataset and using it in a reproducible machine learning pipeline.
 
-We decided to use economic indicators from FRED, including unemployment, inflation, industrial production, and interest rates. We also plan to use historical recession data from NBER.
+Our plan was to collect economic indicators from FRED, including unemployment, inflation, industrial production, and interest rates, along with historical recession data based on NBER classifications.
 
-Our initial plan is to compare logistic regression, LASSO, and random forests. We will evaluate our models using a time-based train/test split and metrics such as precision, recall, and F1 score.
-
-Some anticipated challenges include missing data, different reporting frequencies, and the relatively small number of historical recessions.
+We proposed comparing logistic regression, LASSO, and random forests using a time-based train/test split. We also identified missing data, different reporting frequencies, and the small number of historical recessions as potential challenges.
 
 ### November 5, 2026 — Data and Reference Result
 
-Our current focus is collecting economic data from FRED and combining the indicators into a monthly dataset.
+#### Data
 
-We are starting with unemployment, industrial production, inflation, Treasury yield spreads, and federal funds rates. We also plan to use the USREC series to identify recession periods.
+We successfully downloaded 71 economic indicators from FRED using Python and combined them into a monthly dataset with 815 observations and 72 columns, including the USREC recession indicator.
 
-Our first reference model will be logistic regression, predicting whether the economy will be in a recession three months into the future.
+For our initial model, we selected five predictors: unemployment, the Treasury yield spread, the federal funds rate, annual inflation, and annual industrial production growth. We lagged these predictors by one month and created a target indicating whether the economy would be in a recession three months later.
 
-We plan to use earlier years for training and later years for testing to avoid data leakage associated with random splitting.
+After removing missing observations, we had 600 months of data. We still need to investigate historical coverage, reporting delays, and whether additional indicators would improve our predictions.
 
-**Next Steps:**
-- Finish cleaning and combining the data.
-- Run our initial logistic regression.
-- Compare the results with a simple baseline.
-- Examine potential data quality issues.
+#### Evaluation Plan
 
-### November 12, 2026 — Feature Engineering and Model Development
+We used a chronological train/test split with 462 months for training and 138 for testing. This allows us to evaluate predictions on later economic periods without randomly mixing past and future observations.
+
+We compared LASSO logistic regression with a baseline that always predicts no recession. We used accuracy, precision, recall, F1 score, and ROC AUC to evaluate performance.
+
+To reduce data leakage, we lagged our predictors and fitted the scaler using only the training data. However, historical FRED values may have been revised, which remains a limitation of our approach.
+
+#### First Runnable Result
+
+Our initial LASSO logistic regression produced the following results:
+
+| Metric | No-Recession Baseline | LASSO |
+|---|---|---|
+| Accuracy | 98.55% | 57.25% |
+| Precision | 0% | 3.28% |
+| Recall | 0% | 100% |
+| F1 Score | 0 | 0.0635 |
+| ROC AUC | 0.500 | 0.842 |
+
+LASSO correctly identified both positive recession observations in the test set but also produced 59 false positives. Although the model achieved 100% recall, there were only two positive observations, so we cannot draw strong conclusions yet.
+
+The results suggest that some economic indicators may be useful for distinguishing recession conditions, but the model currently produces too many false alarms.
+
+**Code and Results:**
+
+- [FRED data collection](main.py)
+- [LASSO model](lasso_checkpoint.py)
+- [Cleaned dataset](data/cleaned_sample.csv)
+- [Model performance](results/lasso_metrics.csv)
+- [LASSO coefficients](results/lasso_coefficients.csv)
+
+To reproduce the results, create a local `.env` file containing a valid `FRED_API_KEY`, then run:
+
+```bash
+uv sync
+uv run python main.py
+uv run python lasso.py
+```
+
+### November 12, 2026 — Feature Engineering and Model Improvements
 
 *Planned checkpoint*
 
-We plan to explore additional economic indicators and create new features that may improve recession predictions.
+We plan to investigate why our initial model produced so many false positives and explore ways to improve its precision without losing too much recall.
 
-This could include changes in unemployment, inflation rates, and lagged economic indicators.
-
-We will also begin comparing logistic regression with LASSO to see whether feature selection improves model performance.
+We will also compare LASSO with standard logistic regression and experiment with additional or transformed economic indicators.
 
 **Goals:**
-- Explore relationships between economic indicators.
-- Create additional predictor variables.
-- Run LASSO logistic regression.
-- Compare results with our initial model.
+- Examine relationships between predictors and recession periods.
+- Investigate false positives and possible improvements.
+- Compare LASSO with standard logistic regression.
+- Test additional features if needed.
 
 ### November 19, 2026 — Model Comparison
 
 *Planned checkpoint*
 
-We plan to introduce a random forest model and compare it with our logistic regression and LASSO models.
+We plan to introduce a random forest model and compare its performance with our logistic regression models.
 
-We will examine precision, recall, F1 score, and ROC AUC to understand how well each model identifies recessions.
-
-We also want to investigate false negatives, since missing an actual recession is particularly important for our research question.
+We will focus on whether more complex methods improve recession predictions and examine which economic indicators contribute most to each model.
 
 **Goals:**
-- Train a random forest model.
-- Compare performance across models.
-- Examine feature importance.
-- Investigate incorrect predictions.
+- Train and evaluate a random forest.
+- Compare model performance using the same evaluation period.
+- Examine feature importance and classification errors.
 
-### November 26, 2026 — Model Improvements and Limitations
+### November 26, 2026 — Model Limitations and Refinement
 
 *Planned checkpoint*
 
-We plan to use our previous results to improve the models and investigate their limitations.
+We plan to examine how consistently our models perform across different economic periods and whether changing the prediction horizon affects the results.
 
-We want to determine whether our models perform consistently across different economic periods and whether some indicators are more useful than others.
-
-We will also consider how reporting delays, historical data revisions, and the limited number of recessions might affect our conclusions.
+We will also consider the effects of historical data revisions, reporting delays, and the limited number of recession observations.
 
 **Goals:**
-- Improve model performance where possible.
-- Evaluate different prediction horizons.
-- Examine how predictions change across time periods.
-- Document model limitations.
+- Evaluate model stability across time.
+- Compare different prediction horizons.
+- Document important limitations and potential improvements.
 
 ### December 3, 2026 — Final Analysis and Results
 
 *Planned checkpoint*
 
-Our goal is to finalize our model comparisons and determine whether economic indicators provide useful information for predicting recessions.
+We plan to finalize our model comparisons, create visualizations, and summarize our findings.
 
-We will create visualizations showing model performance, important predictors, and predicted recession probabilities.
-
-We will also begin organizing our findings for the final project report.
+Our main focus will be determining whether the models provide useful information beyond a simple baseline and explaining the tradeoffs between identifying recessions and producing false alarms.
 
 **Goals:**
-- Finalize model comparisons.
-- Create figures and tables.
-- Summarize our main findings.
-- Begin writing the final report.
+- Finalize model evaluations.
+- Create tables and visualizations.
+- Summarize findings and begin the final report.
 
 ### December 10, 2026 — Final Project
 
 *Tentative target — confirm course deadline*
 
-We plan to finish the report and make sure the project is reproducible.
+We plan to complete our report and make sure our analysis is reproducible.
 
-We will document our data sources, methods, results, and limitations. Our final report will discuss how well machine learning can predict recessions and whether more complex models provide meaningful improvements over logistic regression.
+The final report will discuss our methods, results, limitations, and whether more complex machine learning approaches meaningfully improve recession predictions.
 
 ## Data Sources
 
-- FRED: https://fred.stlouisfed.org/
-- NBER Business Cycle Dates: https://www.nber.org/research/data/us-business-cycle-expansions-and-contractions
-- FRED Recession Indicator: https://fred.stlouisfed.org/series/USREC
+- [Federal Reserve Economic Data (FRED)](https://fred.stlouisfed.org/)
+- [NBER Business Cycle Dates](https://www.nber.org/research/data/us-business-cycle-expansions-and-contractions)
+- [FRED USREC Recession Indicator](https://fred.stlouisfed.org/series/USREC)
 
 ## Tools
 
-- Python
-- pandas
-- NumPy
-- scikit-learn
-- matplotlib
+Python, pandas, NumPy, scikit-learn, matplotlib, requests, and uv.
 
 ## Reproducibility
 
-Our repository will contain the Python scripts used to collect, clean, and analyze the data, along with instructions for reproducing our results.
+Our Python scripts collect and prepare the economic data, fit the models, and save the results. Each checkpoint documents our progress, findings, and any changes to the original plan.
 
-As we complete each checkpoint, we will update the corresponding section with our actual progress, results, and any changes to our original plan.
-
+The raw FRED dataset can be regenerated using `main.py` and a personal FRED API key.
