@@ -1,6 +1,6 @@
 # STAT 486 — Recession Prediction Project
 
-**Team Members:** Michael Stutzman and Ryan Morrow
+**Team Members:** Michael Stutzman and Ryan Morrow 
 
 ## Project Overview
 
