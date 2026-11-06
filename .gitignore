@@ -1,0 +1,16 @@
+# Local secrets and API credentials
+.env
+.env.*
+!.env.example
+*api_key*
+*apikey*
+secrets.json
+credentials.json
+
+# Python-generated files
+__pycache__/
+*.py[cod]
+.venv/
+
+# Downloaded FRED data
+fred_economic_data.csv
