@@ -70,19 +70,69 @@ uv run python main.py
 uv run python lasso.py
 ```
 
-### November 12, 2026 — Feature Engineering and Model Improvements
+### November 12, 2026 — Working Investigation and Initial Results
 
-*Planned checkpoint*
+**Data Collection and Pipeline**
 
-We plan to investigate why our initial model produced so many false positives and explore ways to improve its precision without losing too much recall.
+We developed a reproducible Python pipeline that collects historical economic indicators from the [FRED database](https://fred.stlouisfed.org/), converts them to monthly observations, and integrates them into a single dataset. Each observation represents one month of U.S. economic activity.
 
-We will also compare LASSO with standard logistic regression and experiment with additional or transformed economic indicators.
+The dataset includes indicators related to interest rates, employment, inflation, housing, consumer spending, and financial markets. The historical recession indicator (`USREC`) is used to construct a target identifying whether a recession begins within the next six months.
 
-**Goals:**
-- Examine relationships between predictors and recession periods.
-- Investigate false positives and possible improvements.
-- Compare LASSO with standard logistic regression.
-- Test additional features if needed.
+**Code and Reproduction:**
+- [Data collection and integration](main.py)
+- [Environment configuration](pyproject.toml)
+- [Data quality checks](data_quality.py)
+- [Baseline model](baseline_model.py)
+
+Historical observations begin in January 1959, where available. FRED data may be revised, and API access requires a key.
+
+**Data Quality**
+
+| Quality Check | Result |
+|---|---|
+| Number of observations | 815 |
+| Number of economic predictors | 71 |
+| Duplicate rows | 0 |
+| Non-recession months | 719 |
+| Recession months | 95 |
+| Missing recession labels | 1 |
+| Missingness across predictors | Varies substantially |
+
+[Full data quality results](data_quality_results.txt)
+
+The quality checks revealed substantial differences in historical coverage. For example, the high-yield corporate bond spread has 95.5% missing values, while the federal funds rate has only 0.12% missing values. These differences may require us to exclude certain predictors or restrict the study period.
+
+**Initial Model Results**
+
+We trained a logistic regression model using eight economic indicators from the cleaned dataset. We used a chronological split with 507 training observations from January 1959 through June 2007 and 201 testing observations from July 2009 through May 2026. Missing values were handled using median imputation, and predictors were standardized before fitting.
+
+| Metric | Result |
+|---|---:|
+| Accuracy | 87.6% |
+| Precision | 0.0% |
+| Recall | 0.0% |
+| F1 Score | 0.0 |
+| ROC AUC | 0.7393 |
+| Average Precision | 0.0605 |
+| False Positives | 19 |
+| False Negatives | 6 |
+| True Positives | 0 |
+
+[Model results](baseline_results.txt) | [Model predictions](baseline_predictions.csv)
+
+Although the model achieved an ROC AUC of 0.7393, it failed to correctly identify any upcoming recession at the default classification threshold. It produced 19 false warnings and missed all six positive observations. Its relatively high accuracy is misleading because a model that always predicted no upcoming recession would achieve approximately 97% accuracy.
+
+These results suggest that the model has some ability to distinguish between higher and lower-risk periods, but its current classification performance is bad. Additionally, the testing period contains only one recession onset, limiting our ability to assess generalizability.
+
+**Changes and Next Steps**
+
+Our research question remains unchanged. However, the initial results emphasize the need to investigate class imbalance, feature transformations, and classification thresholds before introducing more complex models (decision trees/ random forests).
+
+We plan to compare LASSO with standard logistic regression, investigate false positives, and explore whether changes in economic indicators are more predictive than their raw values.
+
+Our main limitations are the small number of historical recessions, inconsistent predictor coverage, and potential look-ahead bias from data revisions and publication delays. We may narrow our feature set to indicators with longer historical coverage and evaluate performance across additional historical recession periods. One challenge with predicting recessions is that after one happens, there is usually a lot of safety nets put up to make sure a recession doesn't happen in the same way again. Our model needs to be more advanced to be able to predict recessions because they don't happen often and generally they don't follow a strict pattern in how they start. 
+
+Our next question is whether feature engineering and regularization can improve recession prediction while reducing false warnings. One thing we need to keep in mind is not to regularize our model so much that it eliminates all false positives (because it would probably reduce the sensitivity to true positives as well). One challenge in this dataset is that the data does not go back all the way to the Great Depression, one of the strongest and most famous recessions (or depression) in the United States, which would be really good to train on.
 
 ### November 19, 2026 — Model Comparison
 
