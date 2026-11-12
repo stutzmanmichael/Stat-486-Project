@@ -1,0 +1,29 @@
+Training observations: 507
+Testing observations: 201
+
+Training period:
+1959-01-01 00:00:00 to 2007-06-01 00:00:00
+
+Testing period:
+2009-07-01 00:00:00 to 2026-05-01 00:00:00
+
+Confusion matrix:
+[[176  19]
+ [  6   0]]
+
+Classification report:
+              precision    recall  f1-score   support
+
+           0       0.97      0.90      0.93       195
+           1       0.00      0.00      0.00         6
+
+    accuracy                           0.88       201
+   macro avg       0.48      0.45      0.47       201
+weighted avg       0.94      0.88      0.91       201
+
+
+ROC AUC:
+0.7393162393162394
+
+Average precision:
+0.06050656796340667
