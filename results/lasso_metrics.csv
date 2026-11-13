@@ -1,0 +1,3 @@
+model,accuracy,precision,recall,f1,roc_auc,true_positive,false_positive,false_negative,true_negative
+Always no recession,0.9855072463768116,0.0,0.0,0.0,0.5,0,0,2,136
+LASSO logistic regression,0.572463768115942,0.03278688524590164,1.0,0.06349206349206349,0.8419117647058824,2,59,0,77
