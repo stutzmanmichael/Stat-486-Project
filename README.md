@@ -24,7 +24,7 @@ We proposed comparing logistic regression, LASSO, and random forests using a tim
 
 #### Data
 
-We successfully downloaded 71 economic indicators from FRED using Python and combined them into a monthly dataset with 815 observations and 72 columns, including the USREC recession indicator.
+We successfully downloaded 71 economic indicators from FRED using Python and combined them into a monthly dataset with 815 observations and 73 columns total (71 economic indicators, the USREC recession indicator, and the month column).
 
 For our initial model, we selected five predictors: unemployment, the Treasury yield spread, the federal funds rate, annual inflation, and annual industrial production growth. We lagged these predictors by one month and created a target indicating whether the economy would be in a recession three months later.
 
@@ -57,7 +57,7 @@ The results suggest that some economic indicators may be useful for distinguishi
 **Code and Results:**
 
 - [FRED data collection](main.py)
-- [LASSO model](lasso_checkpoint.py)
+- [LASSO model](lasso.py)
 - [Cleaned dataset](data/cleaned_sample.csv)
 - [Model performance](results/lasso_metrics.csv)
 - [LASSO coefficients](results/lasso_coefficients.csv)
@@ -134,18 +134,60 @@ Our main limitations are the small number of historical recessions, inconsistent
 
 Our next question is whether feature engineering and regularization can improve recession prediction while reducing false warnings. One thing we need to keep in mind is not to regularize our model so much that it eliminates all false positives (because it would probably reduce the sensitivity to true positives as well). One challenge in this dataset is that the data does not go back all the way to the Great Depression, one of the strongest and most famous recessions (or depression) in the United States, which would be really good to train on.
 
-### November 19, 2026 — Model Comparison
+### November 19, 2026 — Model Diagnostics and Comparison
 
-*Planned checkpoint*
+**Evidence so far (Route C)**
 
-We plan to introduce a random forest model and compare its performance with our logistic regression models.
+Our dataset from FRED has 815 monthly observations, 71 economic indicators, and the USREC recession label. Our quality checks found no duplicate rows, but historical coverage varies a lot across variables. For example, the high-yield corporate bond spread has about 95.5% missing values, while the federal funds rate has about 0.12% missing values. This means we cannot just use all the variables without thinking about missing data and the time periods they cover.
 
-We will focus on whether more complex methods improve recession predictions and examine which economic indicators contribute most to each model.
+We compared four models on the same problem: predicting whether a recession **starts in the next six months** using eight economic indicators. We used 507 older months for training and 201 later months for testing. We lagged predictors by one month and used training-set-only preprocessing to reduce leakage.
 
-**Goals:**
-- Train and evaluate a random forest.
-- Compare model performance using the same evaluation period.
-- Examine feature importance and classification errors.
+| Model | Accuracy | Precision | Recall | ROC AUC | Average precision | False positives | False negatives |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Always no recession | 97.0% | 0% | 0% | 0.500 | 0.0299 | 0 | 6 |
+| Logistic regression | 87.6% | 0% | 0% | 0.739 | 0.0605 | 19 | 6 |
+| LASSO logistic regression | 88.1% | 0% | 0% | 0.744 | 0.0616 | 18 | 6 |
+| Random forest | 97.0% | 0% | 0% | 0.762 | 0.0662 | 0 | 6 |
+
+The random forest had the best ROC AUC and average precision, but none of the models correctly classified any of the six positive test months at their default cutoffs. The random forest predicted no upcoming recessions at all, giving it the same accuracy as the no-recession baseline. This shows why accuracy is a bad metric to rely on by itself when recession onsets are so rare.
+
+The [random forest feature importance results](results/nov19_rf_importance.csv) showed that the federal funds rate (31.2%) had the highest importance, followed by industrial production (15.3%), the unemployment rate (11.7%), and the 10-year minus 3-month Treasury yield spread (11.6%). These are useful predictors to investigate, although feature importance does not prove that any of them cause recessions. See the [feature importance figure](results/nov19_rf_importance.png).
+
+We also used the logistic regression probabilities saved on November 12 to see what happens when we change the cutoff:
+
+| Probability cutoff | Positive months found (out of 6) | False alarms | Precision | Recall |
+|---|---:|---:|---:|---:|
+| 0.50 | 0 | 19 | 0.0% | 0.0% |
+| 0.01 | 2 | 52 | 3.7% | 33.3% |
+| 0.005 | 5 | 58 | 7.9% | 83.3% |
+| 0.001 | 6 | 67 | 8.2% | 100.0% |
+
+The [false-alarm table](results/nov19_false_alarms.csv) also showed a pattern: of the 19 false positives from logistic regression at a 0.50 cutoff, 3 occurred in 2020, 9 in 2023, and 7 in 2024. All six actual positive test months were September 2019 through February 2020, ahead of the 2020 recession. The model issued more warnings after that recession than in the lead-up to it.
+
+**Interpretation and next step**
+
+One informative failure is that all four models missed every positive month at the default cutoff. Even the random forest, which ranked risk a little better based on ROC AUC, did not give a single positive warning. Lowering the logistic regression cutoff caught more positive months, but it also created many more false alarms. So we are learning that a model can have some useful ranking ability without yet being a useful early-warning system.
+
+Our test set has only six positive months, all leading up to the same 2020 recession. That makes it hard to tell if these results would carry over to other recessions. We also used the test outcomes to explore cutoff choices, so the lower cutoffs are not validated improvements. Historical FRED revisions and publication delays could make real-world predictions harder too.
+
+Next we want to use an earlier validation period to select a cutoff, then evaluate it on a later untouched test period. We also want to investigate why the federal funds rate has the highest importance and try changes in economic indicators instead of only their raw levels. More historical evaluation periods would help us see whether results hold up beyond the 2020 recession.
+
+**Code, results, and figures:**
+
+- [Data collection](main.py), [data-quality checks](data_quality.py), and [quality-check results](data_quality_results.txt)
+- [Model comparison code](model_comparison.py) and [comparison table](results/nov19_model_comparison.csv)
+- [Saved model predictions](results/nov19_model_predictions.csv)
+- [Random forest importance table](results/nov19_rf_importance.csv) and [importance plot](results/nov19_rf_importance.png)
+- [Threshold analysis code](threshold_analysis.py), [threshold results](results/nov19_threshold_results.csv), and [threshold tradeoff plot](results/nov19_threshold_tradeoff.png)
+- [False alarm months](results/nov19_false_alarms.csv)
+
+To reproduce these results, use the local FRED CSV generated with `main.py` and run:
+
+```bash
+uv sync
+uv run python model_comparison.py
+uv run python threshold_analysis.py
+```
 
 ### November 26, 2026 — Model Limitations and Refinement
 
